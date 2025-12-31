@@ -115,7 +115,6 @@ class FindBikeParking extends MCPTool<BikeParkInput> {
         throw error;
       }
     }
-    //add section to warn users about parking in high theft areas...
   }
 }
 export default FindBikeParking;

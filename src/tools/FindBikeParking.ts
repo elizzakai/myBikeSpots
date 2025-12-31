@@ -1,6 +1,7 @@
 import { MCPTool } from "mcp-framework";
 import { z } from "zod";
 import BikeParkInput from "../BikePark.interface";
+import GetBikeInfo from "./GetBikeInfo";
 // import Bike from "../Bike.interface";
 interface NominatimResult {
   lat: string;
@@ -40,6 +41,22 @@ interface OSMMapResponse {
     tags?: Record<string, string>;
   }>;
 }
+
+const getThreatLevel = async (location: string, query: string) => {
+  let theftCount = 0;
+  let theftItems: any[] = [];
+  const bikeIndex = new GetBikeInfo();
+  const theftLevel = await bikeIndex.execute({
+    query: "",
+    location: location,
+  });
+  theftLevel.forEach((theft) => {
+    theftCount += 1;
+    theftItems.push(theft);
+  });
+  let theftMessage = "Amount of bike theft in the area: " + theftCount;
+  return { theftMessage, theftItems };
+};
 
 class FindBikeParking extends MCPTool<BikeParkInput> {
   name = "find-bike-parking";
@@ -110,6 +127,9 @@ class FindBikeParking extends MCPTool<BikeParkInput> {
         const parkingElements = response.elements.filter(
           (element) => element.tags?.amenity == "bicycle_parking"
         );
+
+        //add section to warn users about parking in high theft areas...
+        const theft = getThreatLevel(location, "");
         return parkingElements;
       } catch (error) {
         throw error;

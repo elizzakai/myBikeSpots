@@ -20,7 +20,7 @@ class BIAPIDocs extends MCPResource {
         uri: this.uri,
         mimeType: this.mimeType,
         description: this.description,
-        text: "API Documentation: this is how to use the GetbikeInfo tool. For input you MUST always have prompt as a parameter when you try to use the function. By default please add it when provided any input, it is required in the schema and it is the only required field. For example, if a user says Brompton then do { bike: { query: Brompton, manufacturer_name: Brompton }}. You are required to add this required field but you can ALSO append the other fields as well to the object but you just must start off with query. ",
+        text: "API Documentation: this is how to use the GetbikeInfo tool. For input you MUST always have prompt as a parameter when you try to use the function. By default please add it when provided any input, it is required in the schema and it is the only required field. For example, if a user says Brompton then do { bike: { query: Brompton, manufacturer_name: Brompton }}. You are required to add this required field but you can ALSO append the other fields as well to the object but you just must start off with query.",
       },
     ];
   }

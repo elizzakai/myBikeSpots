@@ -8,6 +8,8 @@ interface Bike {
   manufacturer_name?: string;
   frame_colors?: string[];
   stolen?: boolean;
+  location?: string;
+  // stolen_coordinates?: [number, number];
 }
 
 interface BikeResult {
@@ -57,6 +59,11 @@ class GetBikeInfo extends MCPTool<Bike> {
       type: z.boolean().optional(),
       description: "Filter by stolen status",
     },
+    location: {
+      type: z.string().optional(),
+      description:
+        "General Location/Address of where the Theft occured (City, Zip Code)",
+    },
   };
 
   async execute({
@@ -65,12 +72,16 @@ class GetBikeInfo extends MCPTool<Bike> {
     title,
     manufacturer_name,
     stolen,
+    location,
   }: Bike) {
     try {
       const url = "https://bikeindex.org/api/v3/search";
       const params = new URLSearchParams();
       if (query) {
         params.append("query", query);
+      }
+      if (location) {
+        params.append("location", location);
       }
       if (frame_model) {
         params.append("frame_model", frame_model);

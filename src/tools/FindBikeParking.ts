@@ -1,7 +1,7 @@
 import { MCPTool } from "mcp-framework";
 import { z } from "zod";
 import BikeParkInput from "../BikePark.interface";
-import GetBikeInfo from "./GetBikeInfo";
+import GetBikeInfo from "./GetBikeInfo.js";
 // import Bike from "../Bike.interface";
 interface NominatimResult {
   lat: string;
@@ -39,23 +39,42 @@ interface OSMMapResponse {
       role: string;
     }>;
     tags?: Record<string, string>;
+    googleMaps: string;
   }>;
 }
 
 const getThreatLevel = async (location: string, query: string) => {
-  let theftCount = 0;
   let theftItems: any[] = [];
   const bikeIndex = new GetBikeInfo();
-  const theftLevel = await bikeIndex.execute({
-    query: "",
+
+  // Get total count from count endpoint
+  const countUrl = "https://bikeindex.org/api/v3/search/count";
+  const countParams = new URLSearchParams({
+    stolenness: "proximity",
     location: location,
+    distance: "2",
   });
-  theftLevel.forEach((theft) => {
-    theftCount += 1;
-    theftItems.push(theft);
+  const countResponse = await fetch(`${countUrl}?${countParams.toString()}`);
+  const countData = await countResponse.json();
+  const totalTheftCount = countData.proximity || 0;
+
+  const pageResults = await bikeIndex.execute({
+    query: " ",
+    stolenness: "proximity",
+    location: location,
+    distance: "2",
   });
-  let theftMessage = "Amount of bike theft in the area: " + theftCount;
-  return { theftMessage, theftItems };
+
+  theftItems.push(...pageResults);
+
+  // Filter to only last 90 days
+  const ninetyDaysAgo = Date.now() - 90 * 24 * 60 * 60 * 1000;
+  const recentThefts = theftItems.filter(
+    (theft) => theft.date_stolen && theft.date_stolen * 1000 > ninetyDaysAgo
+  );
+
+  let theftMessage = `Bike thefts in last 90 days: ${recentThefts.length} recent (out of ${theftItems.length} total shown)`;
+  return { theftMessage, theftItems: recentThefts, totalTheftCount };
 };
 
 class FindBikeParking extends MCPTool<BikeParkInput> {
@@ -127,10 +146,25 @@ class FindBikeParking extends MCPTool<BikeParkInput> {
         const parkingElements = response.elements.filter(
           (element) => element.tags?.amenity == "bicycle_parking"
         );
+        parkingElements.forEach((element) => {
+          if (element.lat && element.lon) {
+            element.googleMaps = `https://www.google.com/maps?q=${element.lat},${element.lon}`;
+          }
+        });
 
         //add section to warn users about parking in high theft areas...
-        const theft = getThreatLevel(location, "");
-        return parkingElements;
+        const { theftMessage, theftItems, totalTheftCount } =
+          await getThreatLevel(location, "");
+        return JSON.stringify([
+          ...parkingElements,
+          {
+            "theft summary": theftMessage,
+            "total thefts in area over all time periods": totalTheftCount,
+            "(important!) recent thefts of bikes in the area - but concern the user only with theft that has happened very recently -- in the last 90 days please. let them know":
+              theftItems,
+          },
+        ]);
+        //return { parkingElements, theft };
       } catch (error) {
         throw error;
       }

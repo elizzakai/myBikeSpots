@@ -9,6 +9,10 @@ interface Bike {
   frame_colors?: string[];
   stolen?: boolean;
   location?: string;
+  stolenness?: string;
+  distance?: string;
+  page?: number;
+  per_page?: number;
   // stolen_coordinates?: [number, number];
 }
 
@@ -59,10 +63,26 @@ class GetBikeInfo extends MCPTool<Bike> {
       type: z.boolean().optional(),
       description: "Filter by stolen status",
     },
+    stolenness: {
+      type: z.string().optional(),
+      description: "location is ignored unless stolenness is proximity",
+    },
     location: {
       type: z.string().optional(),
       description:
         "General Location/Address of where the Theft occured (City, Zip Code)",
+    },
+    distance: {
+      type: z.string().optional(),
+      description: "Distance in miles from the location (used with stolenness=proximity)",
+    },
+    page: {
+      type: z.number().optional(),
+      description: "Page number for pagination (default: 1)",
+    },
+    per_page: {
+      type: z.number().optional(),
+      description: "Number of results per page (default: 25, max: 100)",
     },
   };
 
@@ -73,6 +93,10 @@ class GetBikeInfo extends MCPTool<Bike> {
     manufacturer_name,
     stolen,
     location,
+    stolenness,
+    distance,
+    page,
+    per_page,
   }: Bike) {
     try {
       const url = "https://bikeindex.org/api/v3/search";
@@ -82,6 +106,12 @@ class GetBikeInfo extends MCPTool<Bike> {
       }
       if (location) {
         params.append("location", location);
+      }
+      if (stolenness) {
+        params.append("stolenness", stolenness);
+      }
+      if (distance) {
+        params.append("distance", distance);
       }
       if (frame_model) {
         params.append("frame_model", frame_model);
@@ -94,6 +124,12 @@ class GetBikeInfo extends MCPTool<Bike> {
       }
       if (stolen === true || stolen === false) {
         params.append("stolen", stolen.toString());
+      }
+      if (page) {
+        params.append("page", page.toString());
+      }
+      if (per_page) {
+        params.append("per_page", per_page.toString());
       }
       const newUrl = `${url}?${params.toString()}`;
 

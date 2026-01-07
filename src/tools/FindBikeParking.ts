@@ -158,6 +158,8 @@ class FindBikeParking extends MCPTool<BikeParkInput> {
         return JSON.stringify([
           ...parkingElements,
           {
+            "structure for parking options":
+              "organize by what is closest to the provided address, and also theft",
             "theft summary": theftMessage,
             "total thefts in area over all time periods": totalTheftCount,
             "(important!) recent thefts of bikes in the area - but concern the user only with theft that has happened very recently -- in the last 90 days please. let them know":
